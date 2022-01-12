@@ -4,7 +4,7 @@
 """
 starter code for your evaluation assignment
 """
-
+#%%
 # Python Standard Library
 import base64
 import io
@@ -159,10 +159,24 @@ def get_cells(ipynb):
           'source': ['Goodbye! 👋']}]
     """
     pass
-
+#%%
 
 def to_percent(ipynb):
-    r
+    str = ""
+    L = get_cells(ipynb)
+    for i in range(len(L)):
+        if L[i]['cell_type']=='markdown':
+            str += "\n# %% [markdown]\n"
+            for j in range(len(L[i]['source'])):
+                str += "# "
+                str += L[i]['source'][j]
+        else :
+            str += "\n# %%\n"
+            for j in range(len(L[i]['source'])):
+                str += L[i]['source'][j]
+    return str
+
+# l'erreur dans le test provient de la non reconnaissance de l'émoji
     
     """
     Convert a ipynb notebook (dict) to a Python code in the percent format (str).
