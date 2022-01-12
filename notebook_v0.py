@@ -17,8 +17,10 @@ import PIL.Image  # pillow
 
 
 def load_ipynb(filename):
-    r"""
-    Load a jupyter notebook .ipynb file (JSON) as a Python dict.
+    with open(filename, 'rb') as file:
+        return json.loads(file.read())
+
+    """Load a jupyter notebook .ipynb file (JSON) as a Python dict.
 
     Usage:
 
@@ -50,11 +52,14 @@ def load_ipynb(filename):
          'nbformat': 4,
          'nbformat_minor': 5}
     """
-    pass
+    
 
 
 def save_ipynb(ipynb, filename):
-    r"""
+    with open(filename, 'w') as file:
+        return json.dump(ipynb, file)
+
+    """
     Save a jupyter notebook (Python dict) as a .ipynb file (JSON)
 
     Usage:
@@ -73,11 +78,13 @@ def save_ipynb(ipynb, filename):
         True
 
     """
-    pass
+    
 
 
 def get_format_version(ipynb):
-    r"""
+    return f"{ipynb['nbformat']}.{ipynb['nbformat_minor']}"
+    
+    """
     Return the format version (str) of a jupyter notebook (dict).
 
     Usage:
@@ -90,11 +97,12 @@ def get_format_version(ipynb):
         >>> get_format_version(ipynb)
         '4.5'
     """
-    pass
 
 
 def get_metadata(ipynb):
-    r"""
+    return load_ipynb("samples/metadata.ipynb")
+    
+    """
     Return the global metadata of a notebook.
 
     Usage:
@@ -118,7 +126,9 @@ def get_metadata(ipynb):
 
 
 def get_cells(ipynb):
-    r"""
+    return ipynb['cells']
+    
+    """
     Return the notebook cells.
 
     Usage:
@@ -152,7 +162,9 @@ def get_cells(ipynb):
 
 
 def to_percent(ipynb):
-    r"""
+    r
+    
+    """
     Convert a ipynb notebook (dict) to a Python code in the percent format (str).
 
     Usage:
