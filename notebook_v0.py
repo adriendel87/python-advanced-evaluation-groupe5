@@ -205,7 +205,7 @@ def to_percent(ipynb):
 
 
 def starboard_html(code):
-    return f"""
+    r"""
 <!doctype html>
 <html>
     <head>
@@ -264,7 +264,13 @@ def to_starboard(ipynb, html=False):
 # Outputs
 # ------------------------------------------------------------------------------
 def clear_outputs(ipynb):
-    r"""
+    for cell in ipynb['cells']:
+        if cell['cell_type'] == 'code':
+            cell['execution_count'] = None
+            cell['outputs'] = []
+    return ipynb
+    
+    """
     Remove the notebook cell outputs and resets the cells execution counts.
 
     Usage:
@@ -318,7 +324,21 @@ def clear_outputs(ipynb):
 
 
 def get_stream(ipynb, stdout=True, stderr=False):
-    r"""
+    string = ''
+    for cell in ipynb['cells']:
+        if stdout and stderr:
+            if cell['outputs'][0]['name'] == 'stdout' or cell['outputs'][0]['name'] == 'stderr':
+                string += cell['outputs'][0]['text'][0]
+        elif stdout: 
+            if cell['outputs'][0]['name'] == 'stdout':
+                string += cell['outputs'][0]['text'][0]
+        elif stderr:
+            if cell['outputs'][0]['name'] == 'stderr':
+                string += cell['outputs'][0]['text'][0]
+    return string
+
+    
+    """
     Return the text written to the standard output and/or error stream.
 
     Usage:
@@ -336,7 +356,19 @@ def get_stream(ipynb, stdout=True, stderr=False):
 
 
 def get_exceptions(ipynb):
-    r"""
+    errors = []
+    for cell in ipynb['cells']:
+        if cell['cell_type'] == 'code':
+            if cell['outputs'][0]['output_type'] == 'error':
+                #errors.append(cell['outputs'][0]['ename'] + '(\"' + cell['outputs'][0]['evalue'] + '\")')
+                try: 
+                    print(1/0)
+                except ZeroDivisionError as e:
+                    print(cell['outputs'][0]['ename'] + '(\"' + cell['outputs'][0]['evalue'] + '\")')
+                    errors.append(e)
+                #errors.append(Exception(cell['outputs'][0]['ename'] + '(\"' + cell['outputs'][0]['evalue'] + '\")'))
+    return errors
+    """
     Return all exceptions raised during cell executions.
 
     Usage:
@@ -358,7 +390,15 @@ def get_exceptions(ipynb):
 
 
 def get_images(ipynb):
-    r"""
+    for cell in ipynb['cells']:
+        lis = []
+        if cell['cell_type'] == 'code':
+            if cell['outputs'] != [] and 'data' in cell['outputs'][0].keys():
+                if 'image/png' in cell['outputs'][0]['data'].keys():
+                    lis.append(np.array(PIL.Image.open(io.BytesIO(base64.b64decode(cell['outputs'][0]['data']['image/png'])))))
+    return lis
+    
+    """
     Return the PNG images contained in a notebook cells outputs
     (as a list of NumPy arrays).
 
