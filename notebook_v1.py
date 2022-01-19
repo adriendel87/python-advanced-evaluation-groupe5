@@ -6,7 +6,12 @@ an object-oriented version of the notebook toolbox
 """
 
 class CodeCell:
-    r"""A Cell of Python code in a Jupyter notebook.
+    def __init__(self, ipynb):
+        self.id = ipynb['id']
+        self.source = ipynb['source']
+        self.execution_count = ipynb['execution_count']
+    
+    """A Cell of Python code in a Jupyter notebook.
 
     Args:
         ipynb (dict): a dictionary representing the cell in a Jupyter Notebook.
@@ -32,11 +37,15 @@ class CodeCell:
         ['print("Hello world!")']
     """
 
-    def __init__(self, ipynb):
-        pass
+    
 
 class MarkdownCell:
-    r"""A Cell of Markdown markup in a Jupyter notebook.
+    def __init__(self, ipynb):
+        self.id = ipynb['id']
+        self.source = ipynb['source']
+
+    
+    """A Cell of Markdown markup in a Jupyter notebook.
 
     Args:
         ipynb (dict): a dictionary representing the cell in a Jupyter Notebook.
@@ -66,7 +75,16 @@ class MarkdownCell:
         pass
 
 class Notebook:
-    r"""A Jupyter Notebook.
+    def __init__(self, ipynb):
+        self.version = str(ipynb['nbformat']) + '.' + str(ipynb['nbformat_minor'])
+        self.cells = []
+        for cell in ipynb['cells']:
+            if cell['cell_type'] == 'markdown':
+                self.cells.append(MarkdownCell(cell))
+            elif cell['cell_type'] == 'code':
+                self.cells.append(CodeCell(cell))
+    
+    """A Jupyter Notebook.
 
     Args:
         ipynb (dict): a dictionary representing a Jupyter Notebook.
@@ -94,12 +112,13 @@ class Notebook:
             True
     """
 
-    def __init__(self, ipynb):
-        pass
 
     @staticmethod
     def from_file(filename):
-        r"""Loads a notebook from an .ipynb file.
+        from notebook_v0 import load_ipynb
+        return Notebook(load_ipynb(filename))
+        
+        """Loads a notebook from an .ipynb file.
 
         Usage:
 
@@ -166,7 +185,10 @@ class PyPercentSerializer:
         """
         pass
 class Serializer:
-    r"""Serializes a Jupyter Notebook to a file.
+    def __init__(self, notebook):
+        self.notebook = notebook
+    
+    """Serializes a Jupyter Notebook to a file.
 
     Args:
         notebook (Notebook): the notebook to print.
@@ -198,11 +220,29 @@ class Serializer:
         >>> s.to_file("samples/hello-world-serialized.ipynb")
     """
 
-    def __init__(self, notebook):
-        pass
-
     def serialize(self):
-        r"""Serializes the notebook to a JSON object
+        nb = self.notebook
+        dic = {}
+        dic['cells'] = []
+        for cell in nb.cells:
+            ce = {}
+            if isinstance(cell, MarkdownCell):
+                ce['cell_type'] = 'markdown'
+            elif isinstance(cell, CodeCell):
+                ce['cell_type'] = 'code'
+                ce['execution_count'] = cell.execution_count
+            ce['id'] = cell.id
+            ce['metadata'] = {}
+            if isinstance(cell, CodeCell):
+                ce['outputs'] = []
+            ce['source'] = cell.source
+            dic['cells'].append(ce)
+        dic['metadata'] = {}
+        dic['nbformat'] = int(nb.version[0])
+        dic['nbformat_minor'] = int(nb.version[2])
+        return dic
+
+        """Serializes the notebook to a JSON object
 
         Returns:
             dict: a dictionary representing the notebook.
@@ -210,7 +250,10 @@ class Serializer:
         pass
 
     def to_file(self, filename):
-        r"""Serializes the notebook to a file
+        from notebook_v0 import save_ipynb
+        return save.ipynb(self, filename)
+        
+        """Serializes the notebook to a file
 
         Args:
             filename (str): the name of the file to write to.
@@ -254,9 +297,30 @@ class Outliner:
         self.notebook = notebook
 
     def outline(self):
-        r"""Outlines the notebook in a readable format.
+        nb = self.notebook
+        title = f"Jupyter Notebook v{nb.version}\n"
+        body = ''
+        for cell in nb:
+            if isinstance(cell, CodeCell):
+                ce = f"└─▶ Code cell #{cell.id} ({cell.execution_count})\n"
+            elif isinstance(cell, MarkdownCell):
+                ce = f"└─▶ Markdown cell #{cell.id}\n"
+            if len(cell.source) == 1:
+                ce += "    | " + cell.source[0] + '\n'
+            else:
+                for count, line in enumerate(cell.source):
+                    if count == 0:
+                        ce += '    ┌  ' + line
+                    elif count == len(cell.source) - 1:
+                        ce += '    └  ' + line + '\n'
+                    else: 
+                        ce += '    │  ' + line
+            body += ce
+        return title + body
+        
+        """Outlines the notebook in a readable format.
 
         Returns:
             str: a string representing the outline of the notebook.
         """
-        pass
+        
