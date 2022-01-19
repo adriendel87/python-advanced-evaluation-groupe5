@@ -100,7 +100,7 @@ def get_format_version(ipynb):
 
 
 def get_metadata(ipynb):
-    return load_ipynb("samples/metadata.ipynb")
+    return ipynb.get('metadata')
     
     """
     Return the global metadata of a notebook.
@@ -205,7 +205,7 @@ def to_percent(ipynb):
 
 
 def starboard_html(code):
-    r"""
+    return f"""
 <!doctype html>
 <html>
     <head>
@@ -227,7 +227,27 @@ def starboard_html(code):
 
 
 def to_starboard(ipynb, html=False):
-    r"""
+    str = ""
+    cells = get_cells(ipynb)
+    for cell in cells:
+        cell_type = cell['cell_type']
+        if cell_type == 'code':
+            cell_type = 'python'
+            str += f"# %% [{cell_type}]"
+        else:
+            str += f"# %% [{cell_type}]\n"
+        lines = cell['source']
+        for line in lines:
+            if cell_type == 'python':
+                str += f"\n{line}"
+            else :
+                str += line
+            str += "\n"   
+        if html:
+            return starboard_html(str[:-1])
+        else:
+            return str[:-1]
+    """
     Convert a ipynb notebook (dict) to a Starboard notebook (str)
     or to a Starboard HTML document (str) if html is True.
 
